@@ -97,10 +97,38 @@ From here we need to edit a few records on the `settings.db` file of the Setting
 
 In the shell you now have, perform the following:
 ```
-sqlite3
+sqlite3 /data/data/com.android.providers.settings/databases/settings.db
 
+INSERT OR REPLACE INTO global (name, value) VALUES ('device_provisioned', '1');
+INSERT OR REPLACE INTO secure (name, value) VALUES ('user_setup_complete', '1');
 
+.quit
 ```
+
+Now in the android shell type `reboot`.
+
+When you get back to the Provision app on the next reboot, open a new terminal and run the following to disable the Provision app permanently:
+```
+adb root
+adb shell pm disable com.segway.robot.provision
+```
+The Provision app should now disappear and you'll be presented with a pop-up in the bottom asking you to "Select a Home app", select "Launcher" option for this and click "Always".
+
+You now have a normal Android 5.1.1 launcher which will now be default (you can change this so that the the floating Loomo eye will be launched automatically by default on boot-up later) when you boot-up. 
+
+From here you are now free to do as you please: install your own apps, sideload other APKs, use the LoomoMainApp, etc.
+
+
+## Notes
+* Two things that stick out to me as functionality I have not yet figured out how to restore are:
+  1. Not all the options/menus are showing up in the Settings App (not incredibly important but worth noting).
+  2. The swipe down from the top right gesture to get the volume, brightness, and android buttons does not work yet.
+  I am working on figuring those out and will update this guide when I have done so.
+* In the Settings App, it will appear like the "Developer Options" are not enabled, but they actually are (this is why adb worked from boot-up) and you can access that page by calling that activity directly from a root adb shell.
+* I plan to do more exploration of the rooted image and see if there's any other cool functionality that can be unlocked, but I remember from my research into this a couple years ago that not much can really be gained (i.e. things like max_speed, etc. are not available on the android layer of the Loomo, they are controlled at the Segway controller level).
+
+
+
 
 
 
