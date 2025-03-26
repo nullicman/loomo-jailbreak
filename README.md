@@ -1,6 +1,7 @@
 # loomo-jailbreak
+Youtube video of this procedure (and pictures on this doc) coming soon!
 
-## Introduction
+## Introduction 
 Recently (~2025ish) the verification servers and general API that Segway-Ninebot Loomo devices communicated with for being activated and receiving OTA updates (https://api-g1-sg.segwayrobotics.com/) ceased to work and now throws a 502 Bad Gateway error when trying to be accessed. This means that all Loomo robots that are currently not verified/activated yet cannot be used and turn into giant paperweights. I thought this was bad so I wanted to do something about it.
 
 I've had experience tinkering with the Loomo robot and trying to reverse engineer some of its functionalities in the past to extend its capabilities. One thing I did a few years ago was use Wireshark capture the HTTP/HTTPS requests that the Loomo Settings app/OTA app makes when it checks for a software update. This is where I originally found the "verification servers" or the Loomo API server https://api-g1-sg.segwayrobotics.com/. After doing some poking around and looking at the REST API requests it was making for the update, I was able to play with the path figure out how to change it to get a "userdebug" version of the sofware update which came across a .zip file. This .zip file actually contained a rooted firmware image and after some digging and learning more about how other Android x86_64 intel devices worked, I figured out the Intel Platform Flash Tool Lite could be used to flash this rooted Android Loomo image onto the Loomo and that gets you root access to Loomo which really isn't all that exciting _except_ in light of this shutdown of the API server it now means there is now a way to un-paperweight the non-verified, non-activated Loomos of the world and the following steps here will explain how.
@@ -40,6 +41,8 @@ sudo dpkg -i ~/Downloads/platformflashtoollite_5.8.9.0_linux_x86_64.deb
 
 ## Jailbreak Steps
 ### Put Loomo in DNX Fastboot Mode
+Before proceeding, make sure Loomo has atleast 75% or more of its battery.
+
 Place Loomo face down on a table or the ground.
 
 Connect your keyboard to the USB-C port on the back of Loomo's head.
@@ -63,6 +66,42 @@ You should now see the "Segway Robotics" logo along with a text that says "DNX F
 On the computer, open a terminal and run `fastboot devices`, a device should be listed; _if_ a device is not listed you did not connect the usb-c data cable in time between Loomo and the computer from the time when you exited the BIOS and will need to repeat that step, you can turn off the Loomo and try again.
 
 ### Flashing Loomo
+Make sure the userdebug.zip is downloaded onto your computer.
+
+Launch the Intel Platform Flash Tool Lite and select the userdebug.zip. At this time you should see a device showing up as being connected; _if not_ you will need to redo the above DNX Fastboot mode step.
+
+After the userdebug.zip gets loaded into the tool, you should select the wrench/screwdriver icon and MAKE SURE both options shown are off/not on.
+
+Make sure the second dropdown (to the right of the one that says "flash.json") has the option named "blank" selected.
+
+You can now press "Start Flash". At this time you'll see the screen of Loomo list some logs as it gets flashed and you can watch the progress bar on the Intel Platform Flash Tool Lite GUI.
+
+Once finished flashing (this can take 5 minutes) the Loomo may reboot a few times (this can additionally take 5-10 minutes) you will eventually end up on the Provision app "Select a system language" screen--this is a good sign.
+
+_If_ it has been 30 minutes or more and you still have not gotten back to the Provision app then you may have gotten your Loomo stuck in a boot loop (or possibly bricked it). Try to power off and start again from the DNX Fastboot mode step.
+
+### Jailbreaking out of Provision App
+The Provision App is set as the preferred app to take a "HOME" Intent to start off with, this is why it appears immediately after boot-up if you haven't activated/verified yet.
+
+To get around this fact, we will use our newly gotten powers of having root on the Loomo to set some properties to trick the Loomo into thinking it has been provisioned properly and we will also disable the Provision App so it stops appearing during boot-up.
+
+Unplug then replug-in the USB-A to USB-C data cable.
+
+open a new terminal and type in `adb devices`. You should see a device listed (your Loomo). This is a nice little advantage that comes in handy for us from the userdebug image we just flashed: it enables root adb access from boot!
+
+Type in `adb root`.
+
+Then `adb shell` which gets us a root shell into the Loomo.
+
+From here we need to edit a few records on the `settings.db` file of the Settings Provider App so that the device will give us back the ability to use Loomo's ears/HOME button functionality.
+
+In the shell you now have, perform the following:
+```
+sqlite3
+
+
+```
+
 
 
 
