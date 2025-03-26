@@ -135,7 +135,8 @@ From here you are now free to do as you please: install your own apps, sideload 
 
 ## Donate
 If this guide helped you, consider throwing me some beer money. A lot of effort went into pulling all of this research together into one place.
-[![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/nullic)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/nullic)
+
 
 
 
