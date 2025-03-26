@@ -129,6 +129,11 @@ From here you are now free to do as you please: install your own apps, sideload 
 * I plan to do more exploration of the rooted image and see if there's any other cool functionality that can be unlocked, but I remember from my research into this a couple years ago that not much can really be gained (i.e. things like max_speed, etc. are not available on the android layer of the Loomo, they are controlled at the Segway controller level).
 
 
+## Donate
+If this guide helped you, consider throwing me some beer money. A lot of effort went into pulling all of this research together into one place.
+[![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/nullic)
+
+
 
 
 
