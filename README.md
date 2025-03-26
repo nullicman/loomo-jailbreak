@@ -24,6 +24,7 @@ Please only proceed with flashing your Loomo with the rooted firmware if you abs
 * keyboard that either has USB-C or you have a USB-A female to USB-C male adapter.
 * USB-C to USB-A data cable.
 * A Loomo (lol).
+* Loomo Android rooted image (userdebug.zip can be found [here for now](https://drive.google.com/file/d/1H36lfAd3v3aOTfvfhAiy2NpYObejuu4z/view?usp=sharing)).
 
 
 ## Getting Started
