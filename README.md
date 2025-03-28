@@ -2,7 +2,7 @@
 Youtube video of this procedure coming soon!
 
 ## Introduction 
-Recently (~2025ish) the verification servers and general API that Segway-Ninebot Loomo devices communicated with for being activated and receiving OTA updates (https://api-g1-sg.segwayrobotics.com/) ceased to work and now throws a 502 Bad Gateway error when trying to be accessed. This means that all Loomo robots not currently verified/activated yet are now just giant paperweights. I thought this was bad so I wanted to do something about it.
+[On January 10th, 2025](https://service.segway.com/us-en/search/questionDetail?id=50629&esId=gK3myADgpJOndXksXwWMOoRkubM3Ma3Q&knowledgeType=paper&searchId=c2679a5e37f4cc4c133131d2f1cf9368) the application servers for the Segway-Ninebot Loomo robot were shut down. The application servers were responsible for activating Loomo robots and for sending OTA updates. The URL it was hosted at (https://api-g1-sg.segwayrobotics.com/) now throws a 502 Bad Gateway error when attempting to access it. This means that all Loomo robots not currently verified/activated yet are now just giant paperweights. I thought this was bad so I wanted to do something about it.
 
 ![Photo of Loomo failed to verify](images/loomo-failed-to-verify.png)
 
@@ -25,7 +25,7 @@ Please only proceed with flashing your Loomo with the rooted firmware if you abs
 * Laptop or PC running Ubuntu 20.04 (or 22.04 or 24.04 would probably work too).
 * Keyboard that either has USB-C or you have a USB-A female to USB-C male adapter.
 * USB-C to USB-A data cable.
-* A Loomo (lol).
+* A Loomo.
 * Loomo Android rooted image (userdebug.zip can be found [here for now](https://drive.google.com/file/d/1H36lfAd3v3aOTfvfhAiy2NpYObejuu4z/view?usp=sharing)).
 
 
@@ -149,7 +149,7 @@ You have successfully jailbroken your Loomo and freed it from its fate as a gian
 
 
 ## Donate
-If this guide helped you, consider throwing me some beer money. A lot of effort went into pulling all of this research together into one place plus risking my perfectly good Loomo to test this out before publishing. Cheers!
+If this guide helped you, consider throwing me some beer money. A lot of effort went into pulling all of this research together into one place plus I risked my perfectly functional Loomo testing different firmware flashes and reverse engineering before publishing. Cheers!
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/nullic)
 
 
