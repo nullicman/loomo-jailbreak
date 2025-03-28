@@ -2,7 +2,7 @@
 Youtube video of this procedure coming soon!
 
 ## Introduction 
-[On January 10th, 2025](https://service.segway.com/us-en/search/questionDetail?id=50629&esId=gK3myADgpJOndXksXwWMOoRkubM3Ma3Q&knowledgeType=paper&searchId=c2679a5e37f4cc4c133131d2f1cf9368) the application servers for the Segway-Ninebot Loomo robot were shut down. The application servers were responsible for activating Loomo robots and for sending OTA updates. The URL it was hosted at (https://api-g1-sg.segwayrobotics.com/) now throws a 502 Bad Gateway error when attempting to access it. This means that all Loomo robots not currently verified/activated yet are now just giant paperweights. I thought this was bad so I wanted to do something about it.
+[On January 10th, 2025](https://service.segway.com/us-en/search/questionDetail?id=50629&esId=gK3myADgpJOndXksXwWMOoRkubM3Ma3Q&knowledgeType=paper&searchId=c2679a5e37f4cc4c133131d2f1cf9368) the application servers for the Segway-Ninebot Loomo robot were shut down. The application servers were responsible for activating Loomo robots and for sending OTA updates. The URL it was hosted at (https://api-g1-sg.segwayrobotics.com/) now throws a 502 Bad Gateway error when attempting to access it. This means that all Loomo robots not currently verified/activated yet are now just giant paperweights. I thought this was bad so I put together a "jailbreak" to get around this problem.
 
 ![Photo of Loomo failed to verify](images/loomo-failed-to-verify.png)
 
