@@ -123,7 +123,20 @@ INSERT OR REPLACE INTO secure (name, value) VALUES ('user_setup_complete', '1');
 .quit
 ```
 
-Now in the android shell type `reboot`.
+At this time, we also want to go through the normal Provision process as much as possible. To do so, modify the `activateurl` file with your computer's local network IP address in the main directory of Loomo that shows up from your computer's file explorer. 
+
+Then start the fake verification server on your computer by running `python fake_verification_server.py` (if this is your first time doing this you may need to `pip install flask` first).
+
+
+In the adb shell you still have from earlier, type `reboot` or otherwise turn off and back on Loomo.
+
+Now go through the Provision App normal process: select your system language --> connect to the same WiFi network that you computer is on.
+
+You should see the logs on the fake verification server indicate we got a request and it sent a response back to the Loomo.
+
+Place the provision.txt file in the main directory of Loomo from your computer's file explorer.
+
+Turn Loomo off and back on again.
 
 When you get back to the Provision app on the next reboot, open a new terminal and run the following to disable the Provision app permanently:
 ```
@@ -138,11 +151,90 @@ From here you are now free to do as you please: install your own apps, sideload 
 
 You have successfully jailbroken your Loomo and freed it from its fate as a giant paperweight!
 
+_There's still a few more things to restore more functionality. Please see below for help with that._
+
+### Restore Skills ("Ok Loomo", etc.) functionality 
+Since the Loomo mobile app is no longer supported, the only way to "master" all the "skills" is to manually edit the DB records that represent them.
+
+Connect your computer via USB data cable and open a terminal and run:
+```
+adb root 
+adb shell
+
+sqlite3 /data/data/com.segway.robot.host/databases/robot.db
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Voice';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Ride';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Camera basic';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Following shot';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Gallery';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Shadow';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Avatar';
+
+UPDATE SKILL_DATA_MODEL SET level=2 WHERE name='Programming';
+
+```
+To verify all the skills were updated correctl, run:
+```
+SELECT * FROM SKILL_DATA_MODEL;
+```
+You should see a "2" by each row which indicates the skill level has been set to the maximum
+
+Now exit the sqlite3 interactive shell with:
+```
+.exit
+```
+
+And reboot the Android table of Loomo so we can reload the skills we have modified:
+```
+# from the adb root shell
+reboot
+
+```
+
+When it boots back up you should have full access now to things like saying "OK Loomo" and using the pre-programmed voice commands Loomo knows like "Take a picture" or "Follow me."
+
+The low skill rider speed limit should also be lifted after this if it was enabled in the first place.
+
+
+### Restore Developer Mode capability
+
+Make sure adb is in root mode with `adb root` and then open `adb shell` and run:
+```
+settings put secure user_id admin
+setprop ro.robot.mode gx
+```
+
+
+Update `settings_test_url` with the local IP address of your computer and place in the main directory of Loomo that shows up on your computer's file explorer.
+
+Make sure the `fake_verification_server.py` is running and then go into Settings App --> Loomo developer --> toggle "On" Developer Mode and tap "Agree" if it asks you.
+
+Once rebooted, you should be back on the Android Launcher but you'll notice you now have the ability to swipe down from the top of the screen and get access to the three Android buttons and a brightness and volume adjuster, plus easy WiFi toggle.
+
+And if you go into the Settings app you'll notice you have the full array of options now. If you don't see the "Developer options" tab and want it, go to System --> tap Build Number several times until it says you are a "Developer."
+
+One more thing we need to fix now. By default being in "Loomo Developer Mode" hides the RobotMainApp (the Loomo "eye" app) from being on the Launcher. Not sure why Segway did this, but to get it back we simply need to `adb root` and `adb shell` and run:
+```
+pm enable com.segway.robot.host/com.segway.robot.skill.home.HomeActivity
+```
+
+Now if you look in the Launcher list of apps you should see RobotMainApp and be able to open it and use it like normal.
+(I'll try to add steps later for those interested in making RobotMainApp open automatically on startup of the Loomo.)
+
+
+
 
 ## Notes
-* Two things that stick out to me as functionality I have not yet figured out how to restore:
-  1. Not all the options/menus are showing up in the Settings App (not incredibly important but worth noting).
-  2. The swipe down from the top right gesture to get the volume, brightness, and android buttons does not work yet.
+* ~~Two things that stick out to me as functionality I have not yet figured out how to restore:~~
+  1. ~~Not all the options/menus are showing up in the Settings App (not incredibly important but worth noting).~~
+  2. ~~The swipe down from the top right gesture to get the volume, brightness, and android buttons does not work yet.~~
 * I am working on figuring out those two things and will update this guide when I have done so. If you figure them out before then, please let me know or submit a PR to this repo to update the README.
 * In the Settings App, it will appear like the "Developer Options" are not enabled, but they actually are (this is why adb worked from boot-up) and you can access that page by calling that activity directly from a root adb shell if needed.
 * I plan to do more exploration of the rooted image and see if there's any other cool functionality that can be unlocked, but from my past research into this a couple years ago I've found that not much can really be gained (e.g. things like max_speed, etc. are not available on the Android layer of Loomo, they are controlled at the Segway controller firmware level).
