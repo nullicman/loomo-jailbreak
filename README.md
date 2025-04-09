@@ -1,5 +1,5 @@
 # loomo-jailbreak
-Youtube video of this procedure coming soon!
+Youtube tutorial video available [here](https://youtu.be/uUaLv8AlMkE).
 
 ## Introduction 
 [On January 10th, 2025](https://service.segway.com/us-en/search/questionDetail?id=50629&esId=gK3myADgpJOndXksXwWMOoRkubM3Ma3Q&knowledgeType=paper&searchId=c2679a5e37f4cc4c133131d2f1cf9368) the application servers for the Segway-Ninebot Loomo robot were shut down. The application servers were responsible for activating Loomo robots and for sending OTA updates. The URL it was hosted at (https://api-g1-sg.segwayrobotics.com/) now throws a 502 Bad Gateway error when attempting to access it. This means that all Loomo robots not currently verified/activated yet are now just giant paperweights. I thought this was bad so I put together a "jailbreak" to get around this problem.
@@ -16,10 +16,16 @@ Please only proceed with flashing your Loomo with the rooted firmware if you abs
 1. Put Loomo in DNX Fastboot mode from its BIOS so that it can receive a flash update.
 2. Connect to Loomo while its booting into DNX Fastboot mode from a computer that has fastboot&adb + Intel Platform Flash Tool Lite installed on it.
 3. Load up the userdebug.zip rooted Android image into Intel Platform Flash Tool Lite and begin flashing.
-4. If all goes well, you'll be back to the Provision app screen once flashing is complete, except this time you'll have root shell access over adb from boot.
-5. Start a root shell over adb into the Loomo from the computer and update a few SQL records that re-enable functionality of the Loomo that is being blocked by the Provision app until it verifies you with the API server (which it of course cannot anymore).
-6. Reboot from adb.
-7. Disable the Provision app after the reboot via `adb shell` and set the "Launcher" as default and now you can use Loomo normally* (drawbacks listed in the Notes section below).
+4. (Get Passed Provision App with Fake Verification Server) If all goes well, you'll be back to the Provision app on the language selection screen once flashing is complete, except this time you'll have root shell access over adb from boot.
+5. Start a root shell over adb into the Loomo from the computer and set the robot mode to "gx" which tells the Provision App to treat the Loomo differently.
+6. Start the fake verification server on your computer and put the activateurl with your computer's local IP on the Loomo's internal storage directory (this tells Loomo to point at a different verification server than the original one).
+7. Select language and connect to same WiFi network that the computer is on. Loomo will connect out to the fake verification server and exit successfully to the Android Launcher in Developer Mode.
+8. Reboot to restore all Android Launcher functionality.
+9. Restore RobotMainApp for use in Developer Mode.
+10. Restore Loomo Skills ("Ok Loomo", "Follow Me", etc.)
+11. Set a User Id
+12. (Optional) switch to User Mode and back again to Developer Mode if desired.
+13. Disable Loomo speed limit.
 
 ## Prerequisites
 * Laptop or PC running Ubuntu 20.04 (or 22.04 or 24.04 would probably work too).
@@ -27,6 +33,7 @@ Please only proceed with flashing your Loomo with the rooted firmware if you abs
 * USB-C to USB-A data cable.
 * A Loomo.
 * Loomo Android rooted image (userdebug.zip can be found [here for now](https://drive.google.com/file/d/1H36lfAd3v3aOTfvfhAiy2NpYObejuu4z/view?usp=sharing)).
+* Clone or download this repo to your computer.
 
 
 ## Getting Started
@@ -36,7 +43,7 @@ sudo apt update
 sudo apt install android-tools-adb android-tools-fastboot -y
 ```
 
-Install [Intel Platform Flash Tool Lite] (https://github.com/projectceladon/tools) by downloading the Ubuntu 64-bit .deb version and once you have the file downloaded the command will be:
+Install [Intel Platform Flash Tool Lite](https://github.com/projectceladon/tools) by downloading the Ubuntu 64-bit .deb version and once you have the file downloaded the command will be:
 ```
 sudo dpkg -i ~/Downloads/platformflashtoollite_5.8.9.0_linux_x86_64.deb
 ```
@@ -100,63 +107,74 @@ _If_ it has been 20 minutes or more and you still have not gotten back to the Pr
 ### Jailbreaking out of Provision App
 The Provision App is set as the preferred app to take a "HOME" Intent to start off with, this is why it appears immediately after boot-up if you haven't activated/verified yet.
 
-To get around this fact, we will use our new powers of having root on the Loomo to set some properties to trick the Loomo into thinking it has been provisioned already. We will also disable the Provision App so it stops appearing on boot-up.
+To get around this fact, we will use our new powers of having root on the Loomo to set a property that will have Loomo treated as a debug unit that does not need to complete all the checks on Provision App (like having a mobile app connected, etc.).
+
+Also note at this time, you should still be on the language selection screen. Do not move past that at this point in time.
 
 Unplug then replug-in the USB-A to USB-C data cable (we do this every time the Loomo reboots because sometimes adb does not work whe a device is rebooted, it will sometimes say "offline", the remedy is just unplugging and replugging in the cable from one side of the connection).
 
 Open a new terminal and type in `adb devices`. You should see a device listed (your Loomo). This is a nice little advantage that comes in handy for us from the userdebug image we just flashed: it enables root adb access from boot!
 
-Type in `adb root`.
+Type in `adb root` which puts Loomo in root mode.
 
 Then type in `adb shell` which launches a root shell into the Loomo.
 
-From here we need to edit a few records on the `settings.db` file of the Settings Provider App so that the device will give us back the ability to use Loomo's ears/HOME button functionality.
-
-In the shell you now have, perform the following:
+From here we need to set the property `ro.robot.mode` to "gx" on Loomo which we can do by running the following in the root adb shell:
 ```
-sqlite3 /data/data/com.android.providers.settings/databases/settings.db
+setprop ro.robot.mode gx
+```
+You can verify you set this correctly by running:
+```
+getprop ro.robot.mode
+```
+This should return `gx` in the root adb shell.
 
-INSERT OR REPLACE INTO global (name, value) VALUES ('device_provisioned', '1');
+Next, open up a terminal window and navigate to this repo. We will now start the Fake Verification Server which has the same endpoints that the Provision App reaches out to and mimics the response the Provision App is expecting.
+Make sure you have python3 and pip installed. 
 
-INSERT OR REPLACE INTO secure (name, value) VALUES ('user_setup_complete', '1');
-
-.quit
+On your first time running this, you'll need to make sure you have the flask web server library installed. You can do this by running:
+```
+pip install flask
 ```
 
-At this time, we also want to go through the normal Provision process as much as possible. To do so, modify the `activateurl` file with your computer's local network IP address in the main directory of Loomo that shows up from your computer's file explorer. 
-
-Then start the fake verification server on your computer by running `python fake_verification_server.py` (if this is your first time doing this you may need to `pip install flask` first).
-
-
-In the adb shell you still have from earlier, type `reboot` or otherwise turn off and back on Loomo.
-
-Now go through the Provision App normal process: select your system language --> connect to the same WiFi network that you computer is on.
-
-You should see the logs on the fake verification server indicate we got a request and it sent a response back to the Loomo.
-
-Place the provision.txt file in the main directory of Loomo from your computer's file explorer.
-
-Turn Loomo off and back on again.
-
-When you get back to the Provision app on the next reboot, open a new terminal and run the following to disable the Provision app permanently:
+Now run the Fake Verification Server:
 ```
-adb root
-adb shell pm disable com.segway.robot.provision
+python fake_verification_server.py
 ```
-The Provision app should now disappear and you'll be presented with a pop-up in the bottom asking you to "Select a Home app", select "Launcher" option for this and click "Always".
 
-Congrats, you now have a normal Android 5.1.1 launcher which will now be default (you can change this so that the the floating Loomo eye will be launched automatically by default on boot-up later) when you boot-up. 
 
-From here you are now free to do as you please: install your own apps, sideload other APKs, use the LoomoMainApp(the all seeing eye app), etc.
+Next, open up a terminal window or file explorer and navigate to this repo. Modify the `activateurl` file with your computer's local WiFi network IP address and place the file in the Loomo's internal storage directory which you can find my opening a file explorer window and clicking on the "mobile device" that is Loomo (sometimes shows up as VA50EC) and navigating to "Internal Storage". Then place the `activateurl` file that you modified to have your computer's local IP address in there.
+
+Okay, the next step is to select a system language on Provision App on Loomo and also connect Loomo to the same WiFi network that your computer hosting the Fake Verification Server is on.
+
+You should see logs on the Fake Verification Server indicating it got a request from the Loomo and sent a success response in the format that Provision App is expecting back to the Loomo.
+
+The Provision App will then exit succesfully and launch into the Android Launcher in Developer Mode.
+
+At this time, turn Loomo off and back on again in order to completely restore Android Launcher functionality like using Loomo's ears as Home Button presses, etc.
+You can do this either by typing `reboot` into the root adb shell or by pressing the power button, whichever you prefer.
+
+After reboot you now have a functioning Android Launcher in Developer Mode!
 
 You have successfully jailbroken your Loomo and freed it from its fate as a giant paperweight!
 
-_There's still a few more things to restore more functionality. Please see below for help with that._
+_There's still a few more things to restore full functionality. Please see the setps below for help with that._
 
-### Restore Skills ("Ok Loomo", etc.) functionality 
+### Restore RobotMainApp (Loomo "eye" App) for Use in Developer Mode
+By default the RobotMainApp, the Loomo "eye" interactive main app, is hidden in Developer Mode. We can fix this by typing in the following to a root adb shell:
+```
+pm enable com.segway.robot.host
+pm enable com.segway.robot.host/com.segway.robot.skill.home.HomeActivity
+```
+
+If you open the app drawer of the Android Launcher, and scroll a few pages you will see the RobotMainApp is now available. This is great because now you can access the whimsical Loomo built-in functionality whenever you want to from Developer Mode which is the best of both worlds in my opinion.
+
+Open the RobotMainApp atleast once as this is needed to initialize a few things we will need later. Once the loading spinner compeletes, tap the screen just to make sure the apps show up there. Upon exiting by tapping Loomo's ears as a Home Button press, it may ask you what you want to set as the Home Launcher. For now, choose the Android Launcher and tap the "Always" option on that one.
+
+### Restore Skills ("Ok Loomo", "Follow Me", etc.) functionality 
 Since the Loomo mobile app is no longer supported, the only way to "master" all the "skills" is to manually edit the DB records that represent them.
 
-Connect your computer via USB data cable and open a terminal and run:
+Make sure your computer is still connected via USB data cable and open a terminal and run:
 ```
 adb root 
 adb shell
@@ -198,50 +216,67 @@ reboot
 
 ```
 
-When it boots back up you should have full access now to things like saying "OK Loomo" and using the pre-programmed voice commands Loomo knows like "Take a picture" or "Follow me."
+When it boots back up you should have full access now to things like saying "OK Loomo" and using the pre-programmed voice commands Loomo knows like "Take a picture" or "Follow me" from inside the RobotMainApp.
 
-The low skill rider speed limit should also be lifted after this if it was enabled in the first place.
+### Setting up a User Id
+We skipped some of the initialization of the Provision App earlier when we set the property to "gx" and now one of those things we need to address, specifically setting a User Id. Now normally the User Id would be set when you first connect your phone that would have the Loomo mobile app on it with you being logged-in to an account. But because the Segway servers are shutdown now for the Loomo mobile app and the app itself being no longer hosted on the app stores, we have to add a User Id to Loomo ourselves.
 
-
-### Restore Developer Mode capability
-
-Make sure adb is in root mode with `adb root` and then open `adb shell` and run:
+Open a terminal window and start a root adb shell and type the following:
 ```
 settings put secure user_id admin
-setprop ro.robot.mode gx
 ```
 
+### (Optional) Switch to User Mode (and back to Developer Mode when needed)
+Because we set Loomo's robot mode property to "gx", the Provision App put us in Developer Mode which is the main mode for developers that just boots straight into an Android Launcher where you could customize things to launch say a different app on boot-up, you can side-load apps and install them from here, and you also have full access to all of the settings in the Settings App. User Mode on the other hand is the default mode of Loomo that launches the RobotMainApp on boot-up and kind of locks things down UI wise on what you can see and do. I personally don't ever use User Mode as it's more locked down and the only thing it has going for it is that it has the RobotMainApp launch on boot-up, but this can _easily_ be achieved on Developer Mode using several well known methods (not going to cover here but you can ask GPT about you can set an app to start automatically on boot-up).o
 
-Update `settings_test_url` with the local IP address of your computer and place in the main directory of Loomo that shows up on your computer's file explorer.
+Anyways, I say all of that just to point out that User Mode isn't all that useful, but I want to cover how to get in to it _and back out of it_ if you ever need/want to.
 
-Make sure the `fake_verification_server.py` is running and then go into Settings App --> Loomo developer --> toggle "On" Developer Mode and tap "Agree" if it asks you.
+Okay to get to User Mode from Developer Mode, simply open the Settings App and scroll down to find the Loomo Developer tab. From here, toggle the Developer mode option to Off. Loomo will reboot itself and upon boot-up you will see the RobotMainApp being launched. 
 
-Once rebooted, you should be back on the Android Launcher but you'll notice you now have the ability to swipe down from the top of the screen and get access to the three Android buttons and a brightness and volume adjuster, plus easy WiFi toggle.
+If you want to get back to Developer Mode, we have to set up a few things first. As an explanation, when you try to switch to Developer Mode from User Mode by switching the Developer mode toggle to ON in the Settings App, Loomo actually tries to reach out to the official Segway application servers that of course no longer exist. So to get around this, we are going to use the Fake Verification Server again as it also includes endpoints and success responses for talking to the Loomo Settings App for this.
 
-And if you go into the Settings app you'll notice you have the full array of options now. If you don't see the "Developer options" tab and want it, go to System --> tap Build Number several times until it says you are a "Developer."
-
-One more thing we need to fix now. By default being in "Loomo Developer Mode" hides the RobotMainApp (the Loomo "eye" app) from being on the Launcher. Not sure why Segway did this, but to get it back we simply need to `adb root` and `adb shell` and run:
+Open a terminal and launch the Fake Verification Server:
 ```
-pm enable com.segway.robot.host/com.segway.robot.skill.home.HomeActivity
+python3 fake_verification_server.py
 ```
 
-Now if you look in the Launcher list of apps you should see RobotMainApp and be able to open it and use it like normal.
-(I'll try to add steps later for those interested in making RobotMainApp open automatically on startup of the Loomo.)
+Update the `settings_test_url` file with the local IP address of your computer and place it in the internal storage directory of Loomo that shows up on your computer's file explorer.
 
+Make sure the `fake_verification_server.py` is running and then go into Settings App --> Loomo developer --> toggle "ON" Developer mode and tap "Agree" if it asks you.
+
+Once rebooted, you should be back to the Android Launcher and have full access in the Settings App UI to all settings and all the other benefits of Developer Mode.
+
+It's important to point out that every time you go from User Mode to Developer Mode you will need to re-enable the RobotMainApp to have it show up in the app drawer of the Android Launcher. Please refer back to that section above.
+
+### Remove Speed Limit
+The Provision App invokes an artificial "speed limit" when we go through the initial provisioning process that is _supposed_ to get resolved when you connect your Loomo mobile app to Loomo and start riding it and what not, but because the Loomo mobile app is no longer available, we have to bypass this artificial speed limit through some other method.
+
+It's _possible_ you don't have the speed limit restriction. You will know if you have it #1 by Loomo not allowing you to ride on it very fast and #2 by the speedometer LED icon being active above the battery LED icon:
+![photo of Loomo speed limit icon](images/loomo-speed-limit-icon.png)
+
+
+I have written an APK file you can find on this repo called `loomorestorev1.apk`, it simply makes a call using the Loomo SDK to do the following:  `mBase.setRidingSpeedLimitEnable(false);` which is all it takes to get rid of the annoying speed limit thankfully.
+
+Open a terminal window and make sure you are in this repo and then start an root adb shell and type the following:
+``` 
+adb install loomorestorev1.apk
+```
+
+Once that succeeds, open the app drawer on Loomo and find the Loomo Restore app and simply open it once and you will notice the speed limit icon above the battery instantly disappear which means the speed limit restriction is now gone, you can now reach the max speed of Loomo just fine now.
+
+Feel free to uninstall the Loomo Restore app afterwards as its only purpose is this one time fix.
+
+### The End
+Congratulations, you have made it to the end and your Loomo is now free and restored back to where it should be! 
 
 
 
 ## Notes
-* ~~Two things that stick out to me as functionality I have not yet figured out how to restore:~~
-  1. ~~Not all the options/menus are showing up in the Settings App (not incredibly important but worth noting).~~
-  2. ~~The swipe down from the top right gesture to get the volume, brightness, and android buttons does not work yet.~~
-* I am working on figuring out those two things and will update this guide when I have done so. If you figure them out before then, please let me know or submit a PR to this repo to update the README.
-* In the Settings App, it will appear like the "Developer Options" are not enabled, but they actually are (this is why adb worked from boot-up) and you can access that page by calling that activity directly from a root adb shell if needed.
 * I plan to do more exploration of the rooted image and see if there's any other cool functionality that can be unlocked, but from my past research into this a couple years ago I've found that not much can really be gained (e.g. things like max_speed, etc. are not available on the Android layer of Loomo, they are controlled at the Segway controller firmware level).
 
 
 ## Donate
-If this guide helped you, consider throwing me some beer money. A lot of effort went into pulling all of this research together into one place plus I risked my perfectly functional Loomo testing different firmware flashes and reverse engineering before publishing. Cheers!
+If this guide helped you, consider throwing me some beer money. A lot of effort went into pulling all of this research together into one place plus I risked my perfectly functional Loomo testing different firmware flashes and reverse engineering before publishing and the video took a long time to edit together. Cheers!
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/nullic)
 
 
