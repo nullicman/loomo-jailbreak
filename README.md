@@ -252,7 +252,7 @@ It's important to point out that every time you go from User Mode to Developer M
 The Provision App invokes an artificial "speed limit" when we go through the initial provisioning process that is _supposed_ to get resolved when you connect your Loomo mobile app to Loomo and start riding it and what not, but because the Loomo mobile app is no longer available, we have to bypass this artificial speed limit through some other method.
 
 It's _possible_ you don't have the speed limit restriction. You will know if you have it #1 by Loomo not allowing you to ride on it very fast and #2 by the speedometer LED icon being active above the battery LED icon:
-![photo of Loomo speed limit icon](images/loomo-speed-limit-icon.png)
+![photo of Loomo speed limit icon](images/loomo-speed-limit-icon-above-battery.png)
 
 
 I have written an APK file you can find on this repo called `loomorestorev1.apk`, it simply makes a call using the Loomo SDK to do the following:  `mBase.setRidingSpeedLimitEnable(false);` which is all it takes to get rid of the annoying speed limit thankfully.
